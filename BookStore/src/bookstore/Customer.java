@@ -5,39 +5,46 @@
  */
 package bookstore;
 
-/**
- *
- * @author Anthony
- */
 import oracle.jdbc.proxy.annotation.Pre;
 
 import java.sql.*;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Customer {
 
     public static Scanner scan = new Scanner(System.in);
+
+    private static String cusID;
+    
     /*The Login displayed for Employees*/
     public static void CustomerLogin() {
         System.out.println("======================= LOGIN =======================");
         Scanner scanner = new Scanner(System.in);
         System.out.println("\n\tCustomer ID #");
         System.out.print(" > ");
-        String employee_id = scanner.next().trim();
-        if (!checkID(employee_id)) {
+        String customer_id = scanner.next().trim();
+        if (!checkID(customer_id)) {
             CustomerLogin();
         } else {
             System.out.println("\n\tPassword:");
             System.out.print(" > ");
-            String password = scanner.next();
-            if(password.equals("/EXIT")) Login.LoginDirector();
-            while (!checkPassword(employee_id, password)) {
-                System.out.println("\n\tPassword:");
-                System.out.print(" > ");
-                password = scanner.next();
+            String password = scanner.next().trim();
+            if (password.equals("/EXIT")) {
+                Login.LoginDirector();
+            } else {
+                while (!checkPassword(customer_id, password)) {
+                    System.out.println("\n\tPassword:");
+                    System.out.print(" > ");
+                    password = scanner.next();
+                    if (password.equals("/EXIT")) {
+                        Login.LoginDirector();
+                    }
+                }
             }
+            cusID = customer_id;
             showWelcome();
-
         }
     }
 
@@ -94,18 +101,11 @@ public class Customer {
 
             ResultSet answer = help.executeQuery();
             if (answer.next() == false) {
-                System.out.print("ID was InValid. Try Again ");
+                System.out.print("ID was InValid. Try Again \n");
                 return false;
 
             }
-            // else{
-            //     while(answer.next())
-            //     {
-            //         employee_id=answer.getString("employee_id");
-
-            //     }
-            //     employee_id=id;
-            // }
+            
             conn.close();
         } catch (SQLException s) {
             System.out.println(s.getMessage());
@@ -114,12 +114,8 @@ public class Customer {
 
         return true;
     }
-    
-    
-    
-    
-    
-    private static void showWelcome() {
+
+    protected static void showWelcome() {
         SuperUI.clearScreen();
         String input;
         System.out.println("====================== WELCOME ======================");
@@ -128,14 +124,16 @@ public class Customer {
         System.out.println(" 1. Search for a book");
         System.out.println(" 2. View checked out books");
         System.out.println(" 3. Check out a book");
-        System.out.println(" 4. Reserve a book");
+        System.out.println(" 4. Return a book");
         System.out.println(" 5. LOGOUT");
         System.out.print("\nWHAT WOULD YOU LIKE TO DO? ");
         input = scan.nextLine().trim();
 
         switch (input) {
             case "1":
-                if(SuperUI.showSearch() == 1) showWelcome();
+                if (SuperUI.showSearch() == 1) {
+                    showWelcome();
+                }
                 break;
             case "2":
                 showCheckedOutBooks();
@@ -144,7 +142,7 @@ public class Customer {
                 showCheckOutABook();
                 break;
             case "4":
-                showReserveABook();
+                showReturnABook();
                 break;
             case "5":
                 Login.LoginDirector();
@@ -158,33 +156,125 @@ public class Customer {
     private static void showCheckedOutBooks() {
         SuperUI.clearScreen();
         System.out.println("============== YOUR CHECKED OUT BOOKS ===============");
+        ResultSet res = Oracle.showCheckedOutBooks(cusID);
+        SuperUI.printRSet(res);
+        
+        returnToMenu();
+    }
+    
+    private static void showCheckedOutBooksNoClear() {
+        System.out.println("\n============== YOUR CHECKED OUT BOOKS ===============");
+        ResultSet res = Oracle.showCheckedOutBooks(cusID);
+        SuperUI.printRSet(res);
     }
 
     private static void showCheckOutABook() {
         String input;
         SuperUI.clearScreen();
         System.out.println("================== CHECK OUT A BOOK =================");
-        System.out.println("\nOPTIONS");
-        System.out.println("--------");
+        System.out.println("\nCHECK OUT BY:");
+        System.out.println("-------------");
         System.out.println(" 1. Book Name");
         System.out.println(" 2. ISBN");
-        System.out.print("\n CHOOSE AN OPTION: "); input = scan.nextLine().trim();
-        
-        switch(input){
+        System.out.print("\n CHOOSE AN OPTION: ");
+        input = scan.nextLine().trim();
+
+        switch (input) {
             case "1":
             case "Book Name":
-                //search by name
+                System.out.print(" ENTER BOOK NAME: ");
+                input = scan.nextLine().trim();
+                Oracle.checkOutABook(1, input, cusID);
                 break;
             case "2":
             case "ISBN":
-                //search ISBN
+                System.out.print(" ENTER ISBN: ");
+                input = scan.nextLine().trim();
+                Oracle.checkOutABook(2, input, cusID);
+                break;
+        }
+        
+        showCheckedOutBooksNoClear();
+        
+        System.out.print("CHECK OUT ANOTHER BOOK? (Y/N)");
+        input = scan.next();
+        boolean flag = true;
+        while (flag) {
+            switch (input) {
+                case "y":
+                case "Y":
+                    flag = false;
+                    showCheckOutABook();
+                    break;
+                case "n":    
+                case "N":
+                    flag = false;
+                    showWelcome();
+                    break;
+            }
         }
     }
 
-    private static void showReserveABook() {
+    private static void showReturnABook() {
+        String input;
         SuperUI.clearScreen();
-        System.out.println("=================== RESERVE A BOOK ==================");
+        System.out.println("================== RETURN A BOOK =================");
+        System.out.println("\nRETURN BY:");
+        System.out.println("----------");
+        System.out.println(" 1. Book Name");
+        System.out.println(" 2. ISBN");
+        System.out.print("\n CHOOSE AN OPTION: ");
+        input = scan.nextLine().trim();
+
+        switch (input) {
+            case "1":
+            case "Book Name":
+                System.out.print(" ENTER BOOK NAME: ");
+                input = scan.nextLine().trim();
+                Oracle.returnABook(1, input, cusID);
+                break;
+            case "2":
+            case "ISBN":
+                System.out.print(" ENTER ISBN: ");
+                input = scan.nextLine().trim();
+                Oracle.returnABook(2, input, cusID);
+                break;
+        }
+        
+        showCheckedOutBooksNoClear();
+        
+        System.out.print("RETURN ANOTHER BOOK? (Y/N)");
+        input = scan.next();
+        boolean flag = true;
+        while (flag) {
+            switch (input) {
+                case "y":
+                case "Y":
+                    flag = false;
+                    showReturnABook();
+                    break;
+                case "n":    
+                case "N":
+                    flag = false;
+                    showWelcome();
+                    break;
+            }
+        }
     }
 
     
+    private static void returnToMenu(){
+        System.out.print("RETURN TO MENU? (Y/N)");
+        String input = scan.next();
+        boolean flag = true;
+        while (flag) {
+            switch (input) {
+                case "y":
+                case "Y":
+                    flag = false;
+                    showWelcome();
+                    break;
+            }
+        }
+    }
 }

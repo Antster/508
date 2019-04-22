@@ -3,10 +3,6 @@
  */
 package bookstore;
 
-/**
- *
- * @author Anthony
- */
 public class BookStore {
     
     public static void main(String[] args) {

@@ -5,10 +5,6 @@
  */
 package bookstore;
 
-/**
- *
- * @author Anthony
- */
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -22,6 +18,7 @@ public class Login {
         Connection conn = null;
         try {
             Connection con = DriverManager.getConnection("jdbc:oracle:thin:/xe", "", "");
+           
             Statement stmt = con.createStatement();
             conn = con;
         } catch (SQLException s) {
@@ -37,7 +34,7 @@ public class Login {
     public static int LoginScreen() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("===================== BOOKSTORE =====================");
-        System.out.println("How are you login in:" + "\n" + "1. Employee " + "\n" + "2. Customer" + "\n" + "3. EXIT");
+        System.out.println("How are you loging in:" + "\n" + "1. Employee " + "\n" + "2. Customer" + "\n" + "3. EXIT");
         System.out.print(" > ");
         int type = scanner.nextInt();
         type = typeValidation(type);
@@ -139,6 +136,7 @@ public class Login {
             }
             if (type == 3) {
                 System.out.println("Goodbye");
+                System.exit(0);
                 conn.close();
             }
 

@@ -24,3 +24,4 @@ hs_err_pid*
 /BookStore/build.xml
 /BookStore/build
 /BookStore/nbproject/project.properties
+/BookStore/nbproject/private/private.xml
